@@ -1,0 +1,4 @@
+<launch>
+  <node name="listener_node" pkg="beginner_tutorials" type="ros_subscriber.py" output="screen"/>
+  <node name="talker_node" pkg="beginner_tutorials" type="ros_publish.py" />
+</launch>
