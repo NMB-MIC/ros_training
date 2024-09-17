@@ -1,0 +1,19 @@
+<launch>
+  <!-- TurtleBot3 -->
+  <include file="$(find agv_pkg)/launch/bringup.launch">
+  </include>
+    
+  <!-- Gmapping -->
+  <node pkg="gmapping" type="slam_gmapping" name="gmapping_node" output="screen">
+    <param name="base_frame" value="base_footprint"/>
+    <param name="odom_frame" value="odom"/>
+    <param name="map_frame" value="map"/>
+    <rosparam command="load" file="$(find agv_pkg)/config/gmapping_params.yaml" />
+  </node>
+  
+  <!-- Rviz -->
+  <node pkg="rviz" type="rviz" name="rviz" required="true"
+    args="-d $(find agv_pkg)/rviz/gmapping.rviz"/>
+
+
+</launch>

@@ -1,0 +1,28 @@
+<launch>
+  <!-- TurtleBot3 -->
+  <include file="$(find agv_pkg)/launch/bringup.launch"/>
+
+  <!-- Map server -->
+  <node pkg="map_server" name="map_server" type="map_server" args="$(find agv_pkg)/maps/mymap.yaml"/>
+
+  <!-- AMCL -->
+  <include file="$(find agv_pkg)/launch/amcl.launch"/>
+
+  <!-- move_base -->
+  <include file="$(find agv_pkg)/launch/move_base.launch"/>
+
+  <!-- Rviz -->
+  <node pkg="rviz" type="rviz" name="rviz" required="true"
+    args="-d $(find agv_pkg)/rviz/navigation.rviz"/>
+
+  <!-- rosbridge_server -->
+  <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch"/>
+  
+    <!-- ros&SQL -->
+  <!-- <node name="nav_goal" pkg="agv_pkg" type="navigation.py" /> -->
+
+  <!-- riotu_robot_pose_publisher -->
+  <node pkg="riotu_robot_pose_publisher" type="riotu_robot_pose_publisher" name="riotu_robot_pose_publisher"/>
+  
+</launch>
+

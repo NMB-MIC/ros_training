@@ -1,0 +1,13 @@
+<launch>
+  <!-- TurtleBot3 -->
+  <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_world.launch">
+    <arg name="model" value="waffle" />
+  </include>
+
+  <!-- publish data -->
+  <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher">
+    <param name="publish_frequency" type="double" value="10.0" />
+    <param name="tf_prefix" value=""/>
+  </node>
+</launch>
+
