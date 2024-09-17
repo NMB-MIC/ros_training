@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+import rospy
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+import actionlib
+from actionlib_msgs.msg import *
+from tf.transformations import quaternion_from_euler
+from geometry_msgs.msg import Pose, Point, Quaternion
+import paho.mqtt.client as mqtt
+
+rospy.loginfo(["connected"])
+rospy.init_node('goal_nav', anonymous=True)
+move_base = actionlib.SimpleActionClient("move_base",MoveBaseAction)
+rate = rospy.Rate(20) # 5 hz
+rospy.loginfo("wait for the action server to come up")
+move_base.wait_for_server(rospy.Duration(5))
+time_out = 120
+
+
+# Callback function เมื่อมีข้อความใหม่จาก MQTT broker
+def on_message(client, userdata, message):
+    global x,y,theta
+    try:
+        user_input = message.payload.decode("utf-8")
+        if user_input == 'a':
+            x, y, theta = 0.472, 1.382, -0.031
+        elif user_input == 'b':
+            x, y, theta = 4.404, 1.359,3.074
+        elif user_input == 'c':
+            x, y, theta = 1.680, 1.294, -1.635
+        elif user_input == 'pcms':
+            x, y, theta = 1.520, -1.699, -3.091
+        elif user_input == 'start':
+            x, y, theta = -1.856, -0.581, 0.017                
+        else:
+            print("Please type a,b or c not: "+user_input)
+        rospy.loginfo(["Going to : " + "x: " + str(x) + " y: " + str(y) + " theta: " + str(theta)])
+        movebase_client()
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+def movebase_client():
+    #convert euler to quanternion
+    q = quaternion_from_euler(0,0,theta)
+
+    goal = MoveBaseGoal()
+    goal.target_pose.header.stamp = rospy.Time.now()
+    goal.target_pose.header.frame_id = "map"
+    goal.target_pose.pose = Pose(Point(x, y, 0.000), Quaternion(0, 0, q[2],q[3]))
+
+    move_base.send_goal(goal)
+    wait = move_base.wait_for_result(rospy.Duration(time_out))
+    state = move_base.get_state()
+    if wait and state == GoalStatus.SUCCEEDED:
+        result_stat  = "OK"
+    else:
+        move_base.cancel_goal()
+        result_stat  = "Fail"
+    rospy.loginfo(["Done result : " + result_stat])
+
+def main():
+    client = mqtt.Client()
+    client.on_message = on_message
+    client.connect("192.168.1.157", 1883, 60)
+    client.subscribe('/ros3_mqtt_ros_target')
+    client.loop_start()  # Use loop_start instead of loop_forever to avoid blocking the main thread
+    while not rospy.is_shutdown():
+        rate.sleep()
+
+if __name__ == '__main__':
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        rospy.loginfo("Navigation finished.")
