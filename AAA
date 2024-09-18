@@ -1,1 +1,71 @@
+#!/usr/bin/env python3
+import rospy
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
+import actionlib
+from actionlib_msgs.msg import *
+from tf.transformations import quaternion_from_euler
+from geometry_msgs.msg import Pose, Point, Quaternion
+import time #inport time
 
+rospy.loginfo(["connected"])
+rospy.init_node('goal_nav', anonymous=True)
+move_base = actionlib.SimpleActionClient("move_base",MoveBaseAction)
+rate = rospy.Rate(20) # 5 hz
+rospy.loginfo("wait for the action server to come up")
+move_base.wait_for_server(rospy.Duration(5))
+time_out = 120
+
+
+# setting point
+a = 0.388, 1.406, 0.005
+b= 4.235, 1.387,1.593
+c= 4.278, 2.471, 3.091
+d= 0.459,2.492,-1.531
+point = [b,c,d,a]
+
+
+def get_cmd():
+    user_input = input("put cmd go: ").strip().lower()
+    if user_input == "go":
+        go_to_point()
+    else:
+        rospy.loginfo(["PLease type go to cmd"])
+        return get_cmd()
+    
+def go_to_point():
+    for goal in point: #goal[0] = a = 4.278, 2.471, 3.091
+        rospy.loginfo(["Going to : " + "x: " + str(goal[0]) + " y: " + str(goal[1]) + " theta: " + str(goal[2])])
+        movebase_client(goal)
+        rospy.loginfo(["Finish goal = : " + "x: " + str(goal[0]) + " y: " + str(goal[1]) + " theta: " + str(goal[2])])
+        time.sleep(1)
+
+def movebase_client(point_goal):
+    #convert euler to quanternion
+    x,y,theta = point_goal
+    q = quaternion_from_euler(0,0,theta)
+
+    goal = MoveBaseGoal()
+    goal.target_pose.header.stamp = rospy.Time.now()
+    goal.target_pose.header.frame_id = "map"
+    goal.target_pose.pose = Pose(Point(x, y, 0.000), Quaternion(0, 0, q[2], q[3]))
+
+    move_base.send_goal(goal)
+    wait = move_base.wait_for_result(rospy.Duration(time_out))
+    state = move_base.get_state()
+    if wait and state == GoalStatus.SUCCEEDED:
+        result_stat  = "OK"
+    else:
+        move_base.cancel_goal()
+        result_stat  = "Fail"
+    rospy.loginfo(["Done result : " + result_stat])
+
+def main():
+    while not rospy.is_shutdown():
+        get_cmd()
+        rate.sleep()
+
+if __name__ == '__main__':
+    try:
+        main()
+    except rospy.ROSInterruptException:
+        rospy.loginfo("Navigation finished.")
