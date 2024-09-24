@@ -1,8 +1,0 @@
-prefix=/home/ros3/planb_ws/devel
-
-Name: planb_agv_pkg
-Description: Description of planb_agv_pkg
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib 
-Requires: 
